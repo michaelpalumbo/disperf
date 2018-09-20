@@ -4,7 +4,7 @@ const fs = require("fs");
 const { exec } = require('child_process')
 
 
-bandwidth = 100
+bandwidth = 100000000
 report = {};
 
 function iperf() {
@@ -22,8 +22,8 @@ function iperf() {
     if (numbers[1] > 0 ) {
       packetLoss = numbers[0] / numbers[1]
 
-      if (packetLoss < 0.5 ){
-        bandwidth = (bandwidth + 100)
+      if (packetLoss > 0.5 ){
+        bandwidth = (bandwidth + 100000000)
         iperf()
       } else{
         console.log("packet loss cap reached")
@@ -31,7 +31,7 @@ function iperf() {
       }
     } else {
       console.log(" 0 packets lost")
-      bandwidth = (bandwidth + 100)
+      bandwidth = (bandwidth + 100000000)
       iperf()
     }
     // report = JSON.stringify({
