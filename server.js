@@ -8,7 +8,7 @@ bandwidth = 100000000
 report = {};
 
 function iperf() {
-  console.log("\nbandwidth set at " + bandwidth + " mbps")
+  console.log("\nbandwidth set at " + bandwidth + " bps")
   exec('iperf -u -c 171.64.197.158 -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
     // fs.writeFileSync("report.text"), err, 'utf8')
     array = stderr.match(/[^\r\n]+/g);
