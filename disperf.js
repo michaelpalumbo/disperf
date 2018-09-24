@@ -162,7 +162,9 @@ function iperf() {
       console.error(err);
   });
   attempt = intervalCount
-  report2json(attempt, runs, bandwidth)
+  
+  // TODO: get the json reporting going as well, then setup sending it to mongodb
+  // report2json(attempt, runs, bandwidth)
   runs++
   console.log(JSON.stringify(reportJSON, null, 2))
   var numbers = string.match(/\d+/g).map(Number);
