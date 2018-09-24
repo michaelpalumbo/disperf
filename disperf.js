@@ -26,9 +26,11 @@ var connection; //iperf connection details
 
 var report; //container for the report to be sent by email... 
 //track number of times iperf runs in an attempt
-runs = 1;
+// runs = 1;
 
-// interactive shell! use this to exit the script using 'end'. this will trigger a send of the report to Doug and Michael
+// interactive shell! 
+
+// use this to exit the script using 'end'. this will trigger a send of the report to Doug and Michael
 shell
   .command('end', 'Outputs "closing iperf session".')
   .action(function(args, callback) {
@@ -51,7 +53,55 @@ shell
     
     callback();
   });
+// show disperf shell cmd
+shell
+  .delimiter('disperf$')
+  .show();
 
+// print the report while disperf is running
+shell
+  .command('log', 'Outputs "retrieving log, please wait".')
+  .action(function(args, callback) {
+    report = fs.readFileSync(reportFile, 'utf8')
+      console.log(report)
+  callback();
+  })
+// show disperf shell cmd
+shell
+  .delimiter('disperf$')
+  .show();
+
+// send a report to Doug during the disperf session
+shell
+  .command('sendreport', 'Outputs "sending incomplete report to Doug and Michael".')
+  .action(function(args, callback) {
+    report = fs.readFileSync(reportFile, 'utf8')
+    console.log('emailing log report... please wait');
+    sendmail({
+      from: 'info@palumbomichael.com',
+      to: 'dvnt.sea@gmail.com, info@palumbomichael.com',
+      subject: 'mid-session disperf report',
+      text: ('User requested mid-session report sent: ' + reportFile + '\n\n' + report)
+    }, function(err, reply) {
+      console.log(err && err.stack);
+      console.dir(reply);
+      console.log('\n\n' + reportFile + ' sent to dvnt.sea@gmail.com and info@palumbomichael.com')
+    });
+    
+    callback();
+  });
+// show disperf shell cmd
+shell
+  .delimiter('disperf$')
+  .show();
+
+// list the available commands
+shell 
+  .command('help', 'Outputs "list the available commands".')
+  .action(function(args, callback) {
+    console.log('\n\n  log  --  prints the entire report for this session up to this moment\n  end  --  exit the script early but still trigger the sending of the report to Doug and Michael\n  sendreport  --  send the most recent-version (yet uncomplete) version of the report to Doug and Michael')
+  })
+// show disperf shell cmd
 shell
   .delimiter('disperf$')
   .show();
@@ -164,8 +214,8 @@ function iperf() {
   attempt = intervalCount
   
   // TODO: get the json reporting going as well, then setup sending it to mongodb
-  report2json(attempt, runs, bandwidth)
-  runs++
+  // report2json(attempt, runs, bandwidth)
+  // runs++
   // console.log(JSON.stringify(reportJSON, null, 2))
   var numbers = string.match(/\d+/g).map(Number);
   // prevent dividing by zero if no errors
