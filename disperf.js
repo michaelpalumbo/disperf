@@ -94,12 +94,12 @@ function scheduler() {
   intervalCount++;
   console.log('Current report interval: ' + intervalCount)
   // create report file and add a header
-  reportJSON.push(
-    { header:
-    { date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), attempts: numIntervals, attemptRate: interval / 60 / 1000}
-  })
-  console.log(reportJSON)
-  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
+  // reportJSON.push(
+  //   { header:
+  //   { date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), attempts: numIntervals, attemptRate: interval / 60 / 1000}
+  // })
+  // console.log(reportJSON)
+  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + startDate + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
   });
   // generate a report
   iperf()
@@ -164,9 +164,9 @@ function iperf() {
   attempt = intervalCount
   
   // TODO: get the json reporting going as well, then setup sending it to mongodb
-  // report2json(attempt, runs, bandwidth)
+  report2json(attempt, runs, bandwidth)
   runs++
-  console.log(JSON.stringify(reportJSON, null, 2))
+  // console.log(JSON.stringify(reportJSON, null, 2))
   var numbers = string.match(/\d+/g).map(Number);
   // prevent dividing by zero if no errors
   if (numbers[1] > 0 ) {
@@ -194,21 +194,13 @@ function iperf() {
 // run the scheduler!
 scheduler();
 
-function report2json(attempt, run, bandwidth) {
-  reportJSON.push({ 
-    attempts: [{
-         [attempt]: [
-            { [run]: 
-                {
-
-                date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), 
-                bandwidth: bandwidth,
-
-                }
-            }
-         ]
-        }
-        
-    ]
-  })
-}
+// function report2json(attempt, run, bandwidth) {
+//   reportJSON.push({ 
+//     startDate: startDate,
+//     reportDate: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'),
+//     attempt: attempt,
+//     run: run,
+//     bandwidth: bandwidth
+//     })
+//   console.log(reportJSON)
+// }
