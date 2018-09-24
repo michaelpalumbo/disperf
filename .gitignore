@@ -1,0 +1,5 @@
+#don't track report files
+report*.txt
+
+#don't track code insiders metafiles
+disperf.code-workspace

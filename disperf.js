@@ -1,13 +1,17 @@
+#!/usr/bin/env node
+  
 const fs = require("fs");
 const { exec } = require('child_process')
 const sendmail = require('sendmail')()
 const date = require('date-and-time');
+const shell = require("vorpal")();
 
-let now = new Date();
+var reportJSON = [];
+// let now = new Date();
 
 bandwidth = 100000000
 
-var startDate = date.format(now, 'YYYY-MM-DD_HH-mm-ss')
+var startDate = date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss')
 // CLI args: 
 var interval = 30 * 60 * 1000;
 // keep track of number of intervals run since start.
@@ -15,68 +19,42 @@ var intervalCount = 0;
 // default max number of intervals. default at 48, set this using '-n 24'
 var numIntervals = 336;
 // location and name for the report output
-var reportFile = __dirname + '/report_' + date.format(now, 'YYYY-MM-DD_HH-mm-ss') + '.txt'
-var fileName = 'report_' + date.format(now, 'YYYY-MM-DD_HH:mm:ss') + '.txt'
+var reportFile = __dirname + '/report_' + date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss') + '.txt'
+var fileName = 'report_' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '.txt'
 // grab the ip to ip connection details
 var connection; //iperf connection details
 
-var report; //container for the report to be ent by email... 
-/*
- to do...
-// CLI args! There's probably a more efficient way to do this...
-if (process.argv[2], process.argv[4]){
-  switch (process.argv[2]){
-    case "-h":
-    case "--help":
-    console.log("-i, --interval: set the interval time in minutes between runs of iperf. Default: 30\n-n, --numIntervals: set the number of intervals to run through for an entire report Default: 48)");
-    break;
+var report; //container for the report to be sent by email... 
+//track number of times iperf runs in an attempt
+runs = 1;
 
-    case "-i":
-    case "--interval":
-    interval = process.argv[3] * 60 * 1000;
-    console.log('report interval set to ' + process.argv[3] + ' minutes')
-    break;
+// interactive shell! use this to exit the script using 'end'. this will trigger a send of the report to Doug and Michael
+shell
+  .command('end', 'Outputs "closing iperf session".')
+  .action(function(args, callback) {
+    fs.writeFileSync(reportFile, 'disperf manually terminated by user at ' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'),function(err){
+    });
+    console.log('emailing log report... please wait');
+    sendmail({
+      from: 'info@palumbomichael.com',
+      to: 'dvnt.sea@gmail.com, info@palumbomichael.com',
+      subject: 'disperf report',
+      text: ('disperf manually exited. see logfile at ' + reportFile + '\n\n' + report)
+    }, function(err, reply) {
+      console.log(err && err.stack);
+      console.dir(reply);
+      console.log('\n\nScript end. See logfile at ' + reportFile)
 
-    case "-n":
-    case "numIntervals":
-    numIntervals = process.argv[3];
-    console.log('number of intervals set to ' + process.argv[3])
-    break;
-  }
-  switch (process.argv[4]){
-    case "-h":
-    case "--help":
-    console.log("-i, --interval: set the interval time in minutes between runs of iperf. Default: 30\n-n, --numIntervals: set the number of intervals to run through for an entire report Default: 48)");
-    break;
+      // exit script after email sent
+      process.exit()
+    });
+    
+    callback();
+  });
 
-    case "-i":
-    case "--interval":
-    interval = process.argv[5] * 60 * 1000;
-    console.log('report interval set to ' + process.argv[3] + ' minutes')
-    break;
-
-    case "-n":
-    case "numIntervals":
-    numIntervals = process.argv[5];
-    console.log('number of intervals set to ' + process.argv[3])
-    break;
-  }
-}
-*/
-
-// function sendemail () {
-//   //report = 
-//   sendmail({
-//     from: 'info@palumbomichael.com',
-//     to: 'dvnt.sea@gmail.com, info@palumbomichael.com',
-//     subject: 'disperf report',
-//     html: JSON.stringify(fs.readFileSync(reportFile, {encoding: 'utf8'})),
-//   }, function(err, reply) {
-//     console.log(err && err.stack);
-//     console.dir(reply);
-//   });
-//   //  console.log(report)
-// }
+shell
+  .delimiter('disperf$')
+  .show();
 
 // send an email every 24 hours to indicate script is running. 86400000ms
 runStatusInterval = 86400000
@@ -116,7 +94,12 @@ function scheduler() {
   intervalCount++;
   console.log('Current report interval: ' + intervalCount)
   // create report file and add a header
-  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + date.format(now, 'YYYY-MM-DD_HH:mm:ss') + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
+  reportJSON.push(
+    { header:
+    { date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), attempts: numIntervals, attemptRate: interval / 60 / 1000}
+  })
+  console.log(reportJSON)
+  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
   });
   // generate a report
   iperf()
@@ -162,6 +145,8 @@ function scheduler() {
 
 // run iperf, check against bandwidth
 function iperf() {
+  // keep track of number of times iperf runs in attempt
+  
   console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
   exec('iperf -u -c 171.64.197.158 -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
     // the following requires iperf version 2.0.12:
@@ -172,10 +157,14 @@ function iperf() {
     data = array[7].split("]")[1]
     string = array[7].split("/sec  ")[1].replace("/", " ")
 
-  fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(now, 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
+  fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
     if(err)
       console.error(err);
   });
+  attempt = intervalCount
+  report2json(attempt, runs, bandwidth)
+  runs++
+  console.log(JSON.stringify(reportJSON, null, 2))
   var numbers = string.match(/\d+/g).map(Number);
   // prevent dividing by zero if no errors
   if (numbers[1] > 0 ) {
@@ -203,4 +192,21 @@ function iperf() {
 // run the scheduler!
 scheduler();
 
+function report2json(attempt, run, bandwidth) {
+  reportJSON.push({ 
+    attempts: [{
+         [attempt]: [
+            { [run]: 
+                {
 
+                date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), 
+                bandwidth: bandwidth,
+
+                }
+            }
+         ]
+        }
+        
+    ]
+  })
+}
