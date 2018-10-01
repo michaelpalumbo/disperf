@@ -27,12 +27,149 @@ var numIntervals = 336;
 // location and name for the report output
 var reportFile = __dirname + '/report_' + date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss') + '.txt'
 var fileName = 'report_' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '.txt'
+var chartData = 'client/data/report_' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '.csv'
 // grab the ip to ip connection details
 var connection; //iperf connection details
 
 var report; //container for the report to be sent by email... 
 //track number of times iperf runs in an attempt
+
+// websocket stuff:
+
+let sessionId = 0;
+let sessions = [];
 // runs = 1;
+
+const client_path = path.join(__dirname + '/client')
+// client hosting
+const app = express();
+app.use(express.static(client_path))
+app.get('/', function(req, res) {
+	res.sendFile(path.join(client_path, 'index.html'));
+});
+//app.get('*', function(req, res) { console.log(req); });
+const server = http.createServer(app);
+// add a websocket service to the http server:
+const wss = new WebSocket.Server({ server });
+
+// launch the client in chrome:
+exec('/usr/bin/open -a "/Applications/Google Chrome.app" \'http://localhost:8080\'')
+
+// send a (string) message to all connected clients:
+function send_all_clients(msg) {
+	wss.clients.forEach(function each(client) {
+		client.send(msg);
+	});
+}
+
+// whenever a client connects to this websocket:
+wss.on('connection', function(ws, req) {
+  // it defines a new session:
+let session = {
+  id: sessionId++,
+  socket: ws,
+};
+sessions[session.id] = session;
+console.log("server received a connection, new session " + session.id);
+console.log("server has "+wss.clients.size+" connected clients");
+
+const location = url.parse(req.url, true);
+// You might use location.query.access_token to authenticate or share sessions
+// or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
+
+
+  // get list of chart reports for client:
+  var chartFiles = fs.readdirSync(__dirname + '/client/data/');
+
+
+msg = JSON.stringify({
+  //session: session.id,
+  date: Date.now(),
+  type: "fileList",
+  value: chartFiles
+})
+wss.clients.forEach(function each(client) {
+
+  
+  client.send(msg);
+});
+
+ws.on('error', function (e) {
+  if (e.message === "read ECONNRESET") {
+    // ignore this, client will still emit close event
+  } else {
+    console.error("websocket error: ", e.message);
+  }
+});
+
+// what to do if client disconnects?
+ws.on('close', function(connection) {
+  console.log("session", session.id, "connection closed");
+  delete sessions[session.id];
+});
+
+// respond to any messages from the client:
+ws.on('message', function(e) {
+  //console.log(e)
+  if(e instanceof Buffer) {
+    // get an arraybuffer from the message:
+    const ab = e.buffer.slice(e.byteOffset,e.byteOffset+e.byteLength);
+    console.log("session", session.id, "received arraybuffer", ab);
+    // as float32s:
+    console.log(new Float32Array(ab));
+  } else {
+    // get JSON from the message:
+    try {
+      let msg = JSON.parse(e);
+      console.log("session", session.id, "received JSON", msg);
+      handleMessage(msg, session);
+
+    } catch (e) {
+      console.log('bad JSON: ', e);
+    }
+  }
+});
+
+
+
+// // Example sending binary:
+// const array = new Float32Array(5);
+// for (var i = 0; i < array.length; ++i) {
+// 	array[i] = i / 2;
+// }
+// ws.send(array);
+});
+
+server.listen(8080, function() {
+console.log('server listening on %d', server.address().port);
+});
+
+function handleMessage(msg, session) {
+	console.log("message from client: " + msg)
+	switch (msg.type) {
+
+		case "something": {
+			// do this
+		}
+		break;
+
+		break
+		
+	}
+}
+
+function send_log(data){
+  console.log("\n\n\n\n\n\n\n\n\nsending...")
+  msg = JSON.stringify({
+    //session: session.id,
+    date: Date.now(),
+    type: "log",
+    value: data
+  })
+  wss.clients.forEach(function each(client) {
+    client.send(msg);
+  });
+}
 
 // interactive shell! 
 
@@ -101,11 +238,24 @@ shell
   .delimiter('disperf$')
   .show();
 
+// launch the disperf webapp
+shell
+  .command('stats', 'Outputs "view stats in webapp".')
+  .action(function(args, callback) {
+  exec('/usr/bin/open -a "/Applications/Google Chrome.app" \'http://localhost:8080\'')
+
+  });
+// show disperf shell cmd
+shell
+  .delimiter('disperf$')
+  .show();
+
+
 // list the available commands
 shell 
   .command('help', 'Outputs "list the available commands".')
   .action(function(args, callback) {
-    console.log('\n\n  log  --  prints the entire report for this session up to this moment\n  end  --  exit the script early but still trigger the sending of the report to Doug and Michael\n  sendreport  --  send the most recent-version (yet uncomplete) version of the report to Doug and Michael')
+    console.log('\n\n  log  --  prints the entire report for this session up to this moment\n  end  --  exit the script early but still trigger the sending of the report to Doug and Michael\n  sendreport  --  send the most recent-version (yet uncomplete) version of the report to Doug and Michael\nstats -- open the disperf webapp')
   })
 // show disperf shell cmd
 shell
@@ -157,6 +307,12 @@ function scheduler() {
   // console.log(reportJSON)
   fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + startDate + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
   });
+  fs.writeFileSync(chartData, 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  });
+  fs.writeFileSync('client/data.csv', 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  });
+
+
   // generate a report
   iperf()
   // run iperf at every next interval.
@@ -212,38 +368,75 @@ function iperf() {
     header = array[6].split("]")[1]
     data = array[7].split("]")[1]
     string = array[7].split("/sec  ")[1].replace("/", " ")
+    send_log(stderr)
 
-  fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
-    if(err)
-      console.error(err);
-  });
-  attempt = intervalCount
-  
-  // TODO: get the json reporting going as well, then setup sending it to mongodb
-  // report2json(attempt, runs, bandwidth)
-  // runs++
-  // console.log(JSON.stringify(reportJSON, null, 2))
-  var numbers = string.match(/\d+/g).map(Number);
-  // prevent dividing by zero if no errors
-  if (numbers[1] > 0 ) {
-    packetLoss = numbers[0] / numbers[1]
+    fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
+      if(err)
+        console.error(err);
+    });
 
-    if (packetLoss > 0.5 ){
-      bandwidth = (bandwidth + 100000000)
-      iperf()
-      } else{
-        console.log("packet loss cap reached, awaiting next attempt")
-        fs.appendFileSync(reportFile, '-- packet loss success/fail ratio of ' + numbers[0] + '/' + numbers[1] + ' exceeds cap, reached @ bandwidth ' + bandwidth / 1000000 + ' Mbps -- \n\nEnd of Interval ' + intervalCount + '\n',function(err){
-          if(err)
-            console.error(err);
-        });
-        return;
+    // create a csv of the reportFile for the client graph
+    csv = data.replace(/ +(?= )/g,'').replace(/ /g, ',');
+
+
+
+    fs.appendFileSync(chartData, date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + csv + '\n',function(err){
+      if(err)
+        console.error(err);
+    });
+    console.log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\n' + csv)
+    fs.appendFileSync('client/data.csv', date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + csv + '\n',function(err){      
+      if(err)
+        console.error(err);
+    });
+    // send_all_clients("graphUpdate")
+
+    update = JSON.stringify({
+      //session: session.id,
+      date: Date.now(),
+      type: "graphUpdate",
+      value: "graphUpdate"
+    })
+    wss.clients.forEach(function each(client) {
+
+      
+      client.send(update);
+    });
+    // session.socket.send(JSON.stringify({
+    //   session: session.id,
+    //   date: Date.now(),
+    //   type: "graphUpdate",
+    //   value: "graphUpdate"
+    // }));
+
+    attempt = intervalCount
+    
+    // TODO: get the json reporting going as well, then setup sending it to mongodb
+    // report2json(attempt, runs, bandwidth)
+    // runs++
+    // console.log(JSON.stringify(reportJSON, null, 2))
+    var numbers = string.match(/\d+/g).map(Number);
+    // prevent dividing by zero if no errors
+    if (numbers[1] > 0 ) {
+      packetLoss = numbers[0] / numbers[1]
+
+      if (packetLoss > 0.5 ){
+        bandwidth = (bandwidth + 100000000)
+        iperf()
+        } else{
+          console.log("packet loss cap reached, awaiting next attempt")
+          send_log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\npacket loss success/fail ratio of ' + numbers[0] + '/' + numbers[1] + ' exceeds cap, reached @ bandwidth ' + bandwidth / 1000000 + ' Mbps -- \n\nEnd of Interval ' + intervalCount + '\n')
+          fs.appendFileSync(reportFile, '-- packet loss success/fail ratio of ' + numbers[0] + '/' + numbers[1] + ' exceeds cap, reached @ bandwidth ' + bandwidth / 1000000 + ' Mbps -- \n\nEnd of Interval ' + intervalCount + '\n',function(err){
+            if(err)
+              console.error(err);
+          });
+          return;
+        }
+      } else {
+        //console.log(" 0 packets lost") 
+        bandwidth = (bandwidth + 100000000)
+        iperf()
       }
-    } else {
-      //console.log(" 0 packets lost") 
-      bandwidth = (bandwidth + 100000000)
-      iperf()
-    }
   })
 }
 
@@ -262,103 +455,4 @@ scheduler();
 // }
 
 
-const client_path = path.join(__dirname + '/client')
-// client hosting
-const app = express();
-app.use(express.static(client_path))
-app.get('/', function(req, res) {
-	res.sendFile(path.join(client_path, 'index.html'));
-});
-//app.get('*', function(req, res) { console.log(req); });
-const server = http.createServer(app);
-// add a websocket service to the http server:
-const wss = new WebSocket.Server({ server });
 
-// launch the client in chrome:
-exec('/usr/bin/open -a "/Applications/Google Chrome.app" \'http://localhost:8080\'')
-
-// send a (string) message to all connected clients:
-function send_all_clients(msg) {
-	wss.clients.forEach(function each(client) {
-		client.send(msg);
-	});
-}
-
-
-// whenever a client connects to this websocket:
-wss.on('connection', function(ws, req) {
-  // it defines a new session:
-let session = {
-  id: sessionId++,
-  socket: ws,
-};
-sessions[session.id] = session;
-console.log("server received a connection, new session " + session.id);
-console.log("server has "+wss.clients.size+" connected clients");
-
-const location = url.parse(req.url, true);
-// You might use location.query.access_token to authenticate or share sessions
-// or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
-
-
-ws.on('error', function (e) {
-  if (e.message === "read ECONNRESET") {
-    // ignore this, client will still emit close event
-  } else {
-    console.error("websocket error: ", e.message);
-  }
-});
-
-// what to do if client disconnects?
-ws.on('close', function(connection) {
-  console.log("session", session.id, "connection closed");
-  delete sessions[session.id];
-});
-
-// respond to any messages from the client:
-ws.on('message', function(e) {
-  //console.log(e)
-  if(e instanceof Buffer) {
-    // get an arraybuffer from the message:
-    const ab = e.buffer.slice(e.byteOffset,e.byteOffset+e.byteLength);
-    console.log("session", session.id, "received arraybuffer", ab);
-    // as float32s:
-    console.log(new Float32Array(ab));
-  } else {
-    // get JSON from the message:
-    try {
-      let msg = JSON.parse(e);
-      console.log("session", session.id, "received JSON", msg);
-      handleMessage(msg, session);
-
-    } catch (e) {
-      console.log('bad JSON: ', e);
-    }
-  }
-});
-
-// // Example sending binary:
-// const array = new Float32Array(5);
-// for (var i = 0; i < array.length; ++i) {
-// 	array[i] = i / 2;
-// }
-// ws.send(array);
-});
-
-server.listen(8080, function() {
-console.log('server listening on %d', server.address().port);
-});
-
-function handleMessage(msg, session) {
-	console.log("message from client: " + msg)
-	switch (msg.type) {
-
-		case "something": {
-			// do this
-		}
-		break;
-
-		break
-		
-	}
-}

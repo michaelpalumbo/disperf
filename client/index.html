@@ -4,37 +4,29 @@
 
 body { font: 12px Arial;}
 
-path { 
-    stroke: steelblue;
-    stroke-width: 2;
-    fill: none;
-}
-
-.axis path,
-.axis line {
-    fill: none;
-    stroke: grey;
-    stroke-width: 1;
-    shape-rendering: crispEdges;
-}
-
-div.tooltip {	
-    position: absolute;			
-    text-align: left;			
-    /* width: 60px;					 */
-    /* height: 28px;					 */
-    padding: 2px;				
-    font: 12px sans-serif;		
-    background: lightsteelblue;	
-    border: 0px;		
-    border-radius: 8px;			
-    pointer-events: none;			
-}
-
 </style>
 <body>
 
-<!-- load the d3.js library -->    
+<select style="width:30%; overflow: scroll;" id="openFileName" onchange="openFileName(selectedIndex);">
+        <option selected disabled>Select Session...</option> 
+
+    </select> 
+
+    <script>
+        function openFileName (selectedIndex){
+            fileIndex = (selectedIndex - 2)
+            cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
+        }
+    </script>
+
+<iframe id="disperfGraph" src="graph.html" width="99%" height=450  frameborder="2"></iframe>
+
+<div height="30%" scroll="auto" frameborder="2">
+    <ul id="log">
+
+    </ul>
+</div>
+    <!-- load the d3.js library    
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
 <script>
@@ -83,19 +75,22 @@ d3.csv("data.csv", function(error, data) {
     data.forEach(function(d) {
         d.date = parseDate(d.date);
         console.log(d.date)
-        d.unit = d.bandwidth.substr(d.bandwidth.indexOf(' ')+1)
+        d.unit = d.bandwidthUnit
         
-        d.bandwidth = +d.bandwidth.substr(0,d.bandwidth.indexOf(' '));
-        console.log(d.unit)
+        d.bandwidth = +d.bandwidth
+        // console.log(d.unit)
 
         if (d.unit === "Gbits/sec"){
             d.bandwidth = 1000 * d.bandwidth
         }
 
-        d.write = +d.write;
-        d.error = +d.error;
+        d.writeError = d.writeError;
+        // d.error = +d.error;
         d.pps = +d.pps;
+        d.ppsLabel = d.ppsLabel
         d.transferred = d.transferred;
+        d.transferUnit = d.transferUnit;
+
     });
 
     // Scale the range of the data
@@ -118,7 +113,7 @@ d3.csv("data.csv", function(error, data) {
             div.transition()		
                 .duration(200)		
                 .style("opacity", .9);		
-            div	.html(formatTime(d.date) + "<br>Transferred: " + d.transferred + "<br>write/error: " + d.write + "/" + d.error + "<br>PPS: " + d.pps) 	
+            div	.html(formatTime(d.date) + "<br>Transferred: " + d.transferred + ' ' + d.transferUnit + "<br>write/error: " + d.writeError + "<br>PPS: " + d.pps) 	
                 .style("left", (d3.event.pageX) + "px")		
                 .style("top", (d3.event.pageY - 28) + "px");	
             })					
@@ -158,7 +153,124 @@ d3.csv("data.csv", function(error, data) {
         .style("text-anchor", "middle")
         .text("Mbits/sec"); 
 
+}); -->
+<script>
+/////////////////// WEBSOCKET STUFF
+
+var ws;
+function ws_connect(opt) {
+	ws = new WebSocket(opt.transport+'://'+opt.host+':'+opt.port, opt.protocols);
+	ws.binaryType = 'arraybuffer';
+	ws.onerror = opt.onerror;
+	ws.onopen = opt.onopen;
+	ws.onmessage = opt.onmessage;
+	ws.onclose = function(e) {
+		ws = null;
+		setTimeout(function(){
+			console.log("websocket reconnecting...");
+			ws_connect(opt);
+		}, 2000);		
+		opt.onclose(e);
+	}
+	return ws;
+}
+
+ws_connect({
+	transport: "ws",
+	host: "localhost",
+	port: "8080",
+	protocols: [],
+	onerror: function() {},
+	onclose: function(e) { console.log('websocket closed', e.code); },
+	onopen: function() {
+		console.log('websocket opened');
+		// once connected, request the current scene:
+		ws.send(JSON.stringify({
+			type: "init",
+			date: Date.now()
+		}));
+	},
+	onmessage: function(e) { 
+		if (e.data instanceof ArrayBuffer) {
+			console.log("ws received arraybuffer of " + e.data.byteLength + " bytes");
+		} else {
+			try {
+				var msg = JSON.parse(e.data);
+				console.log("ws received JSON", msg);
+				handleMessage(msg);
+			} catch (e) {
+				console.log('ws bad JSON: ', e);
+			}
+		} 
+		// //Example code: send a binary blob:
+		// const array = new Float32Array(5);
+		// for (var i = 0; i < array.length; ++i) {
+		// 	array[i] = i / 2;
+		// }
+		// ws.send(array);
+	},
 });
+
+
+function handleMessage(msg) {
+    console.log(msg)
+
+	switch (msg.type) {
+        case "graphUpdate": 
+        //window.location.reload();	
+        
+            document.getElementById('disperfGraph').contentWindow.location.reload();
+
+			
+        break;
+        
+        case "fileList":
+            console.log("steve " + msg.value)
+            ///// File Chooser
+            cardsFileList = msg.value
+            function filePicker(cardsFileList) {
+                
+                // first clear the select element options before populating it again
+                document.getElementById('openFileName').options.length = 1;
+
+                var sel = document.getElementById('openFileName')
+                // console.log(cardsFileList)
+
+                cardsFileList.forEach(function(element) {
+                    // console.log(element)
+                    // set the filename for the editor to communicate with server...
+                    filename = element;
+                    
+                    var opt = document.createElement('option')
+                    opt.appendChild(document.createTextNode(element))
+                    opt.value = element
+                    sel.appendChild(opt)
+
+                    // // make sure that the .cpp file is loaded in codemirror first
+                    // if (element.includes(".cpp")) {
+                    //     sel.selectedIndex = opt.index;
+                    //     openFileName(opt.index)
+
+                    // }
+                })
+            }
+        break;
+
+        case "log":
+        console.log(msg.value)
+        line = msg.value
+        
+            var ul = document.getElementById("log");
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(line));
+            ul.insertBefore(li, ul.childNodes[0])
+            //ul.appendChild(li);
+        
+        break;
+
+	}
+}
+
 
 </script>
 </body>
