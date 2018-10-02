@@ -1,21 +1,42 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<head>
+    
+</head>
 <style> /* set the CSS */
 
 body { font: 12px Arial;}
 
 </style>
 <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <select style="width:30%; overflow: scroll;" id="openFileName" onchange="openFileName(selectedIndex);">
         <option selected disabled>Select Session...</option> 
+        <option>Real-time of current session (Default)</option>
 
     </select> 
 
     <script>
         function openFileName (selectedIndex){
             fileIndex = (selectedIndex - 2)
-            cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
+            var e = document.getElementById("openFileName");
+            var getFile = e.options[e.selectedIndex].value;
+        //     ws.send(JSON.stringify({
+		// 	type: "getFile",
+        //     date: Date.now(),
+        //     value: getFile
+        // }));
+        if (getFile === 'Real-time of current session (Default)'){
+            $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+        } else {
+            $('#disperfGraph').attr('src', "graph.html?param1=" + 'data/' + getFile); 
+        }
+        // function myFunction(){
+            
+        // } 
+            //console.log(strUser)
+            //cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
         }
     </script>
 
@@ -23,9 +44,16 @@ body { font: 12px Arial;}
 
 <div height="30%" scroll="auto" frameborder="2">
     <ul id="log">
+        <li>awaiting next attempt...</li>
 
     </ul>
 </div>
+
+<script>
+
+var fileList = [];
+
+</script>
     <!-- load the d3.js library    
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
@@ -225,21 +253,23 @@ function handleMessage(msg) {
         break;
         
         case "fileList":
-            console.log("steve " + msg.value)
+            console.log("Files " + msg.value)
+            fileList.push(msg.value)
+            console.log("array: " + fileList)
             ///// File Chooser
-            cardsFileList = msg.value
-            function filePicker(cardsFileList) {
+            
+            
                 
                 // first clear the select element options before populating it again
-                document.getElementById('openFileName').options.length = 1;
+                document.getElementById('openFileName').options.length = 2;
 
                 var sel = document.getElementById('openFileName')
                 // console.log(cardsFileList)
 
-                cardsFileList.forEach(function(element) {
+                msg.value.forEach(function(element) {
                     // console.log(element)
                     // set the filename for the editor to communicate with server...
-                    filename = element;
+                    //filename = element;
                     
                     var opt = document.createElement('option')
                     opt.appendChild(document.createTextNode(element))
@@ -253,11 +283,12 @@ function handleMessage(msg) {
 
                     // }
                 })
-            }
+            
         break;
 
         case "log":
         console.log(msg.value)
+
         line = msg.value
         
             var ul = document.getElementById("log");
