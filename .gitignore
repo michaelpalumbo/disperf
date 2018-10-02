@@ -3,3 +3,7 @@ report*.txt
 
 #don't track code insiders metafiles
 disperf.code-workspace
+
+#don’t track the reports
+*.csv
+*.txt
