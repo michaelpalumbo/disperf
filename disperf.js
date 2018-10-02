@@ -15,8 +15,8 @@ const path = require("path");
 var reportJSON = [];
 // let now = new Date();
 
-bandwidth = 1000000
-increment = 1000000
+bandwidth = 100000000
+increment = 100000000
 
 var startDate = date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss')
 // CLI args: 
@@ -339,7 +339,7 @@ function scheduler() {
   // run iperf at every next interval.
   setInterval(function() {
     // reset bandwidth to min. 
-    bandwidth = 1000000
+    bandwidth = 100000000
     intervalCount++;
     if (intervalCount <= numIntervals) {
       console.log('Current report interval: ' + intervalCount)
@@ -453,7 +453,7 @@ function iperf() {
     // console.log(JSON.stringify(reportJSON, null, 2))
     var numbers = string.match(/\d+/g).map(Number);
     console.log('\n\n\n\n' +bandwidth)
-    if (bandwidth > 10000000 ){
+    if (bandwidth > 1000000000 ){
       console.log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
       send_log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
       return
