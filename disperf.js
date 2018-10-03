@@ -16,6 +16,7 @@ var reportJSON = [];
 // let now = new Date();
 
 bandwidth = 100000000
+increment = 100000000
 
 var startDate = date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss')
 // CLI args: 
@@ -28,6 +29,9 @@ var numIntervals = 336;
 var reportFile = __dirname + '/report_' + date.format(new Date(), 'YYYY-MM-DD_HH-mm-ss') + '.txt'
 var fileName = 'report_' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '.txt'
 var chartData = 'client/data/report_' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '.csv'
+
+// the log from all stdout/stderr messages, to be sent to client upon connection. 
+var logfile = 'client/data/sessionlog.csv'
 // grab the ip to ip connection details
 var connection; //iperf connection details
 
@@ -148,10 +152,23 @@ function handleMessage(msg, session) {
 	console.log("message from client: " + msg)
 	switch (msg.type) {
 
-		case "something": {
-			// do this
+		case "getFile": {
+      requestedFile = fs.readFileSync(__dirname + '/client/data/' + msg.value, 'utf8')
+
+      update = JSON.stringify({
+        //session: session.id,
+        date: Date.now(),
+        type: "loadFile",
+        value: requestedFile
+      })
+      wss.clients.forEach(function each(client) {
+  
+        
+        client.send(update);
+      });
+
 		}
-		break;
+	
 
 		break
 		
@@ -309,8 +326,12 @@ function scheduler() {
   });
   fs.writeFileSync(chartData, 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
   });
-  fs.writeFileSync('client/data.csv', 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  fs.writeFileSync('client/data/data.csv', 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
   });
+
+  fs.writeFileSync('client/data/logfile.csv', '',function(err){
+  });
+  
 
 
   // generate a report
@@ -368,14 +389,21 @@ function iperf() {
     header = array[6].split("]")[1]
     data = array[7].split("]")[1]
     string = array[7].split("/sec  ")[1].replace("/", " ")
-    send_log(stderr)
-
+    // send to client in this order:
+    send_log(data)
+    send_log(header)
+    send_log(connection)
+    send_log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'))
+    
+    
+    
+    
     fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
       if(err)
         console.error(err);
     });
 
-    // create a csv of the reportFile for the client graph
+    // create a csv of the reportFile for the client graph. remove extra spaces, then replace all remaining single-spaces with commas
     csv = data.replace(/ +(?= )/g,'').replace(/ /g, ',');
 
 
@@ -385,10 +413,18 @@ function iperf() {
         console.error(err);
     });
     console.log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\n' + csv)
-    fs.appendFileSync('client/data.csv', date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + csv + '\n',function(err){      
+    fs.appendFileSync('client/data/data.csv', date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + csv + '\n',function(err){      
       if(err)
         console.error(err);
     });
+
+    // fs.appendFileSync('client/data/logfile.csv', date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\n' + header + '\n' + data + '\n',function(err){      
+    //   if(err)
+    //     console.error(err);
+    // });
+
+
+    
     // send_all_clients("graphUpdate")
 
     update = JSON.stringify({
@@ -416,12 +452,18 @@ function iperf() {
     // runs++
     // console.log(JSON.stringify(reportJSON, null, 2))
     var numbers = string.match(/\d+/g).map(Number);
+    console.log('\n\n\n\n' +bandwidth)
+    if (bandwidth > 1000000000 ){
+      console.log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
+      send_log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
+      return
+    }
     // prevent dividing by zero if no errors
     if (numbers[1] > 0 ) {
       packetLoss = numbers[0] / numbers[1]
 
       if (packetLoss > 0.5 ){
-        bandwidth = (bandwidth + 100000000)
+        bandwidth = (bandwidth + increment)
         iperf()
         } else{
           console.log("packet loss cap reached, awaiting next attempt")
@@ -432,9 +474,10 @@ function iperf() {
           });
           return;
         }
-      } else {
+      }       
+      else {
         //console.log(" 0 packets lost") 
-        bandwidth = (bandwidth + 100000000)
+        bandwidth = (bandwidth + increment)
         iperf()
       }
   })

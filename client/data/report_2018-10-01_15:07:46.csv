@@ -1,4 +1,0 @@
-date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel
-2018-10-01_15:07:57,0.00-10.00,sec,119,MBytes,100,Mbits/sec,85030/14,8503,pps
-2018-10-01_15:08:08,0.00-10.00,sec,238,MBytes,200,Mbits/sec,170065/10,17006,pps
-2018-10-01_15:08:19,0.00-10.00,sec,358,MBytes,300,Mbits/sec,255129/10,25510,pps

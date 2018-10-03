@@ -1,21 +1,44 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<head>
+    
+</head>
 <style> /* set the CSS */
 
 body { font: 12px Arial;}
 
 </style>
 <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <select style="width:30%; overflow: scroll;" id="openFileName" onchange="openFileName(selectedIndex);">
         <option selected disabled>Select Session...</option> 
+        <option>Real-time of current session (Default)</option>
 
     </select> 
 
     <script>
+// global so we can access this in other functions        
+var getFile;
         function openFileName (selectedIndex){
             fileIndex = (selectedIndex - 2)
-            cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
+            var e = document.getElementById("openFileName");
+            var getFile = e.options[e.selectedIndex].value;
+        //     ws.send(JSON.stringify({
+		// 	type: "getFile",
+        //     date: Date.now(),
+        //     value: getFile
+        // }));
+        if (getFile === 'Real-time of current session (Default)'){
+            $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+        } else {
+            $('#disperfGraph').attr('src', "graph.html?param1=" + 'data/' + getFile); 
+        }
+        // function myFunction(){
+            
+        // } 
+            //console.log(strUser)
+            //cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
         }
     </script>
 
@@ -23,9 +46,16 @@ body { font: 12px Arial;}
 
 <div height="30%" scroll="auto" frameborder="2">
     <ul id="log">
+        <li>awaiting next attempt...</li>
 
     </ul>
 </div>
+
+<script>
+
+var fileList = [];
+
+</script>
     <!-- load the d3.js library    
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
@@ -217,47 +247,51 @@ function handleMessage(msg) {
 
 	switch (msg.type) {
         case "graphUpdate": 
-        //window.location.reload();	
-        
-            document.getElementById('disperfGraph').contentWindow.location.reload();
-
-			
-        break;
-        
-        case "fileList":
-            console.log("steve " + msg.value)
-            ///// File Chooser
-            cardsFileList = msg.value
-            function filePicker(cardsFileList) {
-                
-                // first clear the select element options before populating it again
-                document.getElementById('openFileName').options.length = 1;
-
-                var sel = document.getElementById('openFileName')
-                // console.log(cardsFileList)
-
-                cardsFileList.forEach(function(element) {
-                    // console.log(element)
-                    // set the filename for the editor to communicate with server...
-                    filename = element;
-                    
-                    var opt = document.createElement('option')
-                    opt.appendChild(document.createTextNode(element))
-                    opt.value = element
-                    sel.appendChild(opt)
-
-                    // // make sure that the .cpp file is loaded in codemirror first
-                    // if (element.includes(".cpp")) {
-                    //     sel.selectedIndex = opt.index;
-                    //     openFileName(opt.index)
-
-                    // }
-                })
+            // reload the graph according to which dataset is currently selected by user
+            // if using default dataset (which appears at startup)
+            if (getFile === null) {
+                document.getElementById('disperfGraph').contentWindow.location.reload();
             }
+            // if using the default dataset, but user picked it likely after looking at another dataset:
+            else if (getFile === 'Real-time of current session (Default)'){
+            $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+            } 
+            // if using a user-selected dataset (static data), don't refresh the graph!
+            else {
+            }			
+        break;
+            
+        ///// File Chooser        
+        case "fileList":
+            fileList.push(msg.value)
+            // first clear the select element options before populating it again
+            document.getElementById('openFileName').options.length = 2;
+            // target the file selection UI
+            var sel = document.getElementById('openFileName')
+            // break list into individual files
+            msg.value.forEach(function(element) {
+                // restrict file list to .csv and only the dated reports
+                if (element.includes('.csv')){
+                    if (element.includes('logfile.csv')){
+                        // ignore these files...
+                    } 
+                    else if (element.includes('data.csv')){
+                        // ignore these files...
+                    } 
+                    // populate the selection UI with correct filenames
+                    else {
+                        var opt = document.createElement('option')
+                        opt.appendChild(document.createTextNode(element))
+                        opt.value = element
+                        sel.appendChild(opt)
+                    }
+                }
+            })       
         break;
 
         case "log":
         console.log(msg.value)
+
         line = msg.value
         
             var ul = document.getElementById("log");
