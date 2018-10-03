@@ -1,5 +1,5 @@
-#pesky .DS_Store
-.DS_Store
+#pesky_.DS_Store
+*.DS_Store
 
 #don't track report files
 *.txt
