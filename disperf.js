@@ -175,12 +175,25 @@ function handleMessage(msg, session) {
 	}
 }
 
+// send log output to client
 function send_log(data){
-  console.log("\n\n\n\n\n\n\n\n\nsending...")
   msg = JSON.stringify({
     //session: session.id,
     date: Date.now(),
     type: "log",
+    value: data
+  })
+  wss.clients.forEach(function each(client) {
+    client.send(msg);
+  });
+}
+
+//send connection info to client
+function send_connection(data){
+  msg = JSON.stringify({
+    //session: session.id,
+    date: Date.now(),
+    type: "connection",
     value: data
   })
   wss.clients.forEach(function each(client) {
@@ -392,7 +405,7 @@ function iperf() {
     // send to client in this order:
     send_log(data)
     send_log(header)
-    send_log(connection)
+    send_connection(connection)
     send_log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'))
     
     
@@ -468,6 +481,9 @@ function iperf() {
         } else{
           console.log("packet loss cap reached, awaiting next attempt")
           send_log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\npacket loss success/fail ratio of ' + numbers[0] + '/' + numbers[1] + ' exceeds cap, reached @ bandwidth ' + bandwidth / 1000000 + ' Mbps -- \n\nEnd of Interval ' + intervalCount + '\n')
+          send_log('\n')
+          send_log('awaiting next attempt...')
+
           fs.appendFileSync(reportFile, '-- packet loss success/fail ratio of ' + numbers[0] + '/' + numbers[1] + ' exceeds cap, reached @ bandwidth ' + bandwidth / 1000000 + ' Mbps -- \n\nEnd of Interval ' + intervalCount + '\n',function(err){
             if(err)
               console.error(err);
