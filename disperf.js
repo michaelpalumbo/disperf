@@ -393,7 +393,7 @@ function scheduler() {
 function iperf() {
   // keep track of number of times iperf runs in attempt
   
-  console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
+  //console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
   exec('iperf -u -c 171.64.197.121 -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
     // the following requires iperf version 2.0.12:
     array = stderr.match(/[^\r\n]+/g);
@@ -425,7 +425,7 @@ function iperf() {
       if(err)
         console.error(err);
     });
-    console.log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\n' + csv)
+    //console.log(date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\n' + csv)
     fs.appendFileSync('client/data/data.csv', date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + csv + '\n',function(err){      
       if(err)
         console.error(err);
@@ -465,7 +465,7 @@ function iperf() {
     // runs++
     // console.log(JSON.stringify(reportJSON, null, 2))
     var numbers = string.match(/\d+/g).map(Number);
-    console.log('\n\n\n\n' +bandwidth)
+    
     if (bandwidth > 1000000000 ){
       console.log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
       send_log("Dispersion Lab theoretical limit of 1Gbps reached, awaiting next attempt")
