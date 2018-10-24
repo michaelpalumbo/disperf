@@ -335,11 +335,11 @@ function scheduler() {
   //   { date: date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss'), attempts: numIntervals, attemptRate: interval / 60 / 1000}
   // })
   // console.log(reportJSON)
-  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + startDate + '\nReport interval rate: ' + interval / 60 / 1000 + ' minutes\nNumber of intervals: ' + numIntervals + '\n',function(err){
+  fs.writeFileSync(reportFile, 'Dispersion Lab iperf generated report: ' + startDate,function(err){
   });
-  fs.writeFileSync(chartData, 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  fs.writeFileSync(chartData, 'Interval,Transfer,Bandwidth,Jitter,Lost/Total,Datagrams\n',function(err){
   });
-  fs.writeFileSync('client/data/data.csv', 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  fs.writeFileSync('client/data/data.csv', 'Interval,Transfer,Bandwidth,Jitter,Lost/Total,Datagrams\n',function(err){
   });
 
   fs.writeFileSync('client/data/logfile.csv', '',function(err){
@@ -349,6 +349,7 @@ function scheduler() {
 
   // generate a report
   iperf()
+  /*
   // run iperf at every next interval.
   setInterval(function() {
     // reset bandwidth to min. 
@@ -388,13 +389,14 @@ function scheduler() {
     }
   }, interval);
 }
-
+*/
 // run iperf, check against bandwidth
 function iperf() {
   // keep track of number of times iperf runs in attempt
   
   //console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
   exec('iperf -u -s -p 4464', (stdout, stderr, err) => {
+    console.log(stderr)
     // the following requires iperf version 2.0.12:
     array = stderr.match(/[^\r\n]+/g);
     output = stderr
@@ -411,7 +413,7 @@ function iperf() {
     
     
     
-    fs.appendFileSync(reportFile, '\nInterval: ' + intervalCount + '\n' + date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
+    fs.appendFileSync(reportFile, date.format(new Date(), 'YYYY-MM-DD_HH:mm:ss') + '\nbandwidth set at: ' + bandwidth / 1000000 + ' Mbps\n' + header + '\n' + data + '\n',function(err){
       if(err)
         console.error(err);
     });

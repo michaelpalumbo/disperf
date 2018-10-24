@@ -1,4 +1,11 @@
 date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel
-2018-10-24_14:10:27,0.00-10.00,sec,119,MBytes,100,Mbits/sec,85031/14,8503,pps
-2018-10-24_14:10:38,0.00-10.00,sec,238,MBytes,200,Mbits/sec,170102/10,17006,pps
-2018-10-24_14:10:49,0.00-10.00,sec,358,MBytes,300,Mbits/sec,255146/10,25510,pps
+2018-10-24_15:08:26,0.00-4.92,sec,58.6,MBytes,100,Mbits/sec,41806/8,8503,pps
+2018-10-24_15:08:27,0.00-0.55,sec,13.1,MBytes,200,Mbits/sec,9360/0,17006,pps
+2018-10-24_15:08:28,0.00-0.40,sec,14.4,MBytes,300,Mbits/sec,10287/0,25507,pps
+2018-10-24_15:08:39,0.00-10.00,sec,477,MBytes,400,Mbits/sec,340219/10,34013,pps
+2018-10-24_15:08:50,0.00-10.00,sec,596,MBytes,500,Mbits/sec,425239/10,42516,pps
+2018-10-24_15:09:01,0.00-10.00,sec,715,MBytes,600,Mbits/sec,510254/10,51020,pps
+2018-10-24_15:09:12,0.00-10.00,sec,835,MBytes,700,Mbits/sec,595273/10,59523,pps
+2018-10-24_15:09:23,0.00-10.00,sec,954,MBytes,800,Mbits/sec,680576/10,68027,pps
+2018-10-24_15:09:34,0.00-10.00,sec,1.05,GBytes,900,Mbits/sec,765645/10,76530,pps
+2018-10-24_15:09:45,0.00-10.00,sec,1.11,GBytes,957,Mbits/sec,813417/5811504,81342,pps
