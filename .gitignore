@@ -1,9 +1,10 @@
+#pesky_.DS_Store
+*.DS_Store
+
 #don't track report files
-report*.txt
+*.txt
+*.csv
 
 #don't track code insiders metafiles
 disperf.code-workspace
 
-#don’t track the reports
-*.csv
-*.txt

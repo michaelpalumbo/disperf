@@ -11,36 +11,70 @@ body { font: 12px Arial;}
 <body>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
+<table>
+    <tr>
+        <th>
+            Attempt Interval (s)
+        </th>
+        <th>
+            Total Number of Attempts
+        </th>
+        <th>
+            Last Attempt
+        </th>
+    </tr>
+    <tr>
+        <td>
+
+        </td>
+        <td>
+
+        </td>
+        <td>
+
+        </td>
+    </tr>
+</table>
+
+<div height="10%" scroll="auto" frameborder="2">
+        <ul id="connection">
+            <li></li>
+    
+        </ul>
+    </div>
+
 <select style="width:30%; overflow: scroll;" id="openFileName" onchange="openFileName(selectedIndex);">
         <option selected disabled>Select Session...</option> 
         <option>Real-time of current session (Default)</option>
 
     </select> 
 
-    <script>
-// global so we can access this in other functions        
-var getFile;
-        function openFileName (selectedIndex){
-            fileIndex = (selectedIndex - 2)
-            var e = document.getElementById("openFileName");
-            var getFile = e.options[e.selectedIndex].value;
-        //     ws.send(JSON.stringify({
-		// 	type: "getFile",
-        //     date: Date.now(),
-        //     value: getFile
-        // }));
-        if (getFile === 'Real-time of current session (Default)'){
-            $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
-        } else {
-            $('#disperfGraph').attr('src', "graph.html?param1=" + 'data/' + getFile); 
-        }
-        // function myFunction(){
-            
-        // } 
-            //console.log(strUser)
-            //cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
-        }
-    </script>
+<!-- load graph into iframe! -->
+<script>
+// so we can access the current data source in other functions:   
+var getFile = 'data/data.csv';
+
+function openFileName (selectedIndex){
+    fileIndex = (selectedIndex - 2)
+    var e = document.getElementById("openFileName");
+    var getFile = e.options[e.selectedIndex].value;
+    //     ws.send(JSON.stringify({
+    // 	type: "getFile",
+    //     date: Date.now(),
+    //     value: getFile
+    // }));
+    if (getFile === 'Real-time of current session (Default)'){
+        $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+    } else {
+        $('#disperfGraph').attr('src', "graph.html?param1=" + 'data/' + getFile); 
+    }
+    // function myFunction(){
+        
+    // } 
+        //console.log(strUser)
+        //cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
+    }
+</script>
 
 <iframe id="disperfGraph" src="graph.html" width="99%" height=450  frameborder="2"></iframe>
 
@@ -249,7 +283,7 @@ function handleMessage(msg) {
         case "graphUpdate": 
             // reload the graph according to which dataset is currently selected by user
             // if using default dataset (which appears at startup)
-            if (getFile === null) {
+            if (getFile === 'data/data.csv') {
                 document.getElementById('disperfGraph').contentWindow.location.reload();
             }
             // if using the default dataset, but user picked it likely after looking at another dataset:
@@ -298,6 +332,23 @@ function handleMessage(msg) {
             var li = document.createElement("li");
             li.appendChild(document.createTextNode(line));
             ul.insertBefore(li, ul.childNodes[0])
+            //ul.appendChild(li);
+        
+        break;
+
+        case "connection":
+        console.log(msg.value)
+
+        line = msg.value
+        
+
+            var ul = document.getElementById("connection");
+
+            ul.removeChild(ul.childNodes[0]); 
+            ul.removeChild(ul.childNodes[1]); 
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(line));
+            ul.appendChild(li, ul.childNodes)
             //ul.appendChild(li);
         
         break;
