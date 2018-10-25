@@ -8,3 +8,5 @@
 #don't track code insiders metafiles
 disperf.code-workspace
 
+#don't track the npm
+node_modules
