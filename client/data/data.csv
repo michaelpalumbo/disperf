@@ -1,3 +1,6 @@
 date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel
-2018-10-02_11:03:14,0.00-10.00,sec,119,MBytes,100,Mbits/sec,85052/11,8503,pps
-2018-10-02_11:03:25,0.00-10.00,sec,191,MBytes,160,Mbits/sec,136368/5385958,13635,pps
+2018-10-02_11:43:14,0.00-10.00,sec,119,MBytes,100,Mbits/sec,85049/12,8503,pps
+2018-10-02_11:43:25,0.00-10.00,sec,202,MBytes,170,Mbits/sec,144205/4792586,14420,pps
+2018-10-02_12:13:14,0.00-10.00,sec,118,MBytes,99.3,Mbits/sec,84461/3965916,8445,pps
+2018-10-02_12:45:25,0.00-10.00,sec,119,MBytes,100,Mbits/sec,85046/11,8503,pps
+2018-10-02_12:45:36,0.00-10.00,sec,149,MBytes,125,Mbits/sec,106578/5717102,10655,pps

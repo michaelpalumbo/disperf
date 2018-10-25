@@ -279,6 +279,7 @@ shell
   .delimiter('disperf$')
   .show();
 
+  /*
 // send an email every 24 hours to indicate script is running. 86400000ms
 runStatusInterval = 86400000
 function runStatus(){
@@ -307,6 +308,7 @@ function runStatus(){
 
 // run the disperf status emailer
 runStatus()
+*/
 
 console.log('report interval set to ' + interval / 60 / 1000 + ' minutes')
 console.log('number of intervals set to ' + numIntervals)

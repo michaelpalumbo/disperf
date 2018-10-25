@@ -1,3 +1,8 @@
+<!-- to do -->
+<!-- add zoom and pan, w/ nice context view too: https://bl.ocks.org/EfratVil/92f894ac0ba265192411e73f633a3e2f -->
+<!-- alternate zoom approach: https://bl.ocks.org/rutgerhofste/5bd5b06f7817f0ff3ba1daa64dee629d -->
+<!-- add time and date ranges  -->
+
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style> /* set the CSS */
@@ -77,6 +82,8 @@ var svg = d3.select("body")
     .append("g")
         .attr("transform", 
               "translate(" + margin.left + "," + margin.top + ")");
+
+
 
 // default data
 function getParamValue(paramName)
