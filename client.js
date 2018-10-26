@@ -339,7 +339,7 @@ function scheduler() {
   });
   fs.writeFileSync(chartData, 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
   });
-  fs.writeFileSync('client/data/data.csv', 'date,interval,timeUnit,transferred,transferUnit,bandwidth,bandwidthUnit,writeError,pps,ppsLabel\n',function(err){
+  fs.writeFileSync('client/data/data.csv', 'date,transferred,transferUnit,bandwidth,bandwidthUnit,jitter,jitterUnit,writeError,writePercentage\n',function(err){
   });
 
   fs.writeFileSync('client/data/logfile.csv', '',function(err){
@@ -396,13 +396,18 @@ function iperf() {
   //console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
   exec('iperf -u -c 130.63.255.176 -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
     // the following requires iperf version 2.0.12:
+    console.log(stderr)
     array = stderr.match(/[^\r\n]+/g);
     output = stderr
     connection = array[5].split("]")[1]
     header = array[6].split("]")[1]
-    data = array[7].split("]")[1]
-    string = array[7].split("/sec  ")[1].replace("/", " ")
+    console.log(header)
+   data = array[10].split(/sec (.+)/)[1]
+   console.log(data)
+   string = array[10].split(/sec (.+)/)[1]
+  //  .replace("/", " ")
     // send to client in this order:
+    
     send_log(data)
     send_log(header)
     send_connection(connection)
@@ -496,6 +501,7 @@ function iperf() {
         bandwidth = (bandwidth + increment)
         iperf()
       }
+      
   })
 }
 

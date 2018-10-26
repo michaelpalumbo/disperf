@@ -112,7 +112,7 @@ function loadGraph(csvSource) {
             d.date = parseDate(d.date);
             console.log(d.date)
             d.unit = d.bandwidthUnit
-            
+
             d.bandwidth = +d.bandwidth
             // console.log(d.unit)
 
@@ -122,10 +122,15 @@ function loadGraph(csvSource) {
 
             d.writeError = d.writeError;
             // d.error = +d.error;
-            d.pps = +d.pps;
-            d.ppsLabel = d.ppsLabel
+            // d.pps = +d.pps;
+            // d.ppsLabel = d.ppsLabel
             d.transferred = d.transferred;
+
             d.transferUnit = d.transferUnit;
+
+            d.writePercentage = d.writePercentage
+            d.jitter = d.jitter
+            d.jitterUnit = d.jitterUnit
 
         });
 
@@ -149,7 +154,7 @@ function loadGraph(csvSource) {
                 div.transition()		
                     .duration(200)		
                     .style("opacity", .9);		
-                div	.html(formatTime(d.date) + "<br>Transferred: " + d.transferred + ' ' + d.transferUnit + "<br>write/error: " + d.writeError + "<br>PPS: " + d.pps) 	
+                div	.html(formatTime(d.date) + "<br>Transferred: " + d.transferred + ' ' + d.transferUnit + "<br>Bandwidth: " + d.bandwidth + ' ' + d.bandwidthUnit + "<br>write/error: " + d.writeError + "<br>Write %: " + d.writePercentage + "<br>Jitter: " + d.jitter + ' ' + d.jitterUnit) 	
                     .style("left", (d3.event.pageX) + "px")		
                     .style("top", (d3.event.pageY - 28) + "px");	
                 })					
