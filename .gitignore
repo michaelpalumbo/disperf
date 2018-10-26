@@ -4,6 +4,7 @@
 #don't track report files
 *.txt
 *.csv
+client/data/*
 
 #don't track code insiders metafiles
 disperf.code-workspace
