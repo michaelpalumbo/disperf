@@ -11,15 +11,22 @@ const url = require('url');
 
 const path = require("path");
 
-console.log(process.argv[2])
+const terminalLink = require('terminal-link');
+ 
+const webApp = terminalLink('disperf diagnostics page', 'localhost:8080');
 
 switch(process.argv[2]){
 
     case 'c':
     case 'client':
-    console.log('\n\nnote: temporarily client mode will not report into console. for stats and stdout see the webapp')
-    execSync('node client.js')
-    shell
+
+    if (!process.argv[3]){
+        console.log("error: client mode expecting Server IP. \n\nTry: 'npm start client nnn.nnn.nnn.nnn'")
+        process.exit()
+    } else{
+        console.log('\ntemporary: client mode does not log to console. for stats and stdout see the ' + webApp)
+        
+        shell
         .command('end', 'Outputs "closing client".')
         .action(function(args, callback) {
             // ensure iperf stops running in background
@@ -29,6 +36,11 @@ switch(process.argv[2]){
         shell
         .delimiter('disperf$')
         .show();
+        exec('node client.js ' + process.argv[3])
+
+
+    }
+ 
 
     break;
 
@@ -82,5 +94,5 @@ switch(process.argv[2]){
     break;
     
     case undefined:
-    console.log('error: disperf must be run with client or server mode specified e.g. \n"npm start server" \nor \n"npm start client"')
+    console.log('error: disperf must be run with client or server mode specified e.g. \n"npm start server" \nor \n"npm start client <SERVER_IP_ADDRESS>"')
 }

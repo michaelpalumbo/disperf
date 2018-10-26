@@ -394,7 +394,7 @@ function iperf() {
   // keep track of number of times iperf runs in attempt
   
   //console.log("Bandwidth increment set at " + bandwidth / 1000000 + " Mbps")
-  exec('iperf -u -c 130.63.255.176 -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
+  exec('iperf -u -c ' + process.argv[2] + ' -p 4464 -e -b ' + bandwidth, (stdout, stderr, err) => {
     // the following requires iperf version 2.0.12:
     console.log(stderr)
     array = stderr.match(/[^\r\n]+/g);
