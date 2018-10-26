@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const express = require('express'); 
 const fs = require("fs");
-const { exec, execSync } = require('child_process')
+const { exec, execSync, spawn } = require('child_process')
 const sendmail = require('sendmail')()
 const date = require('date-and-time');
 const shell = require("vorpal")();
@@ -17,13 +17,68 @@ switch(process.argv[2]){
 
     case 'c':
     case 'client':
+    console.log('\n\nnote: temporarily client mode will not report into console. for stats and stdout see the webapp')
     execSync('node client.js')
+    shell
+        .command('end', 'Outputs "closing client".')
+        .action(function(args, callback) {
+            // ensure iperf stops running in background
+            process.exit()
+        }, 2000);
+        // show disperf shell cmd
+        shell
+        .delimiter('disperf$')
+        .show();
 
     break;
 
     case 's':
     case 'server':
-    execSync('node server.js')
+        const server = spawn('iperf', ['-s', '-u', '-p', '4464']);
+        const serverPID = server.pid
+        console.log('iperf pid', serverPID)
+        console.log('\n=*=*=*=*=*=*=*=*=*=*=*=*=*=\nIMPORTANT: \nplease type "end" + Enter, instead of "crtl-c" to exit this script!\n=*=*=*=*=*=*=*=*=*=*=*=*=*=\n' )
+        // use this to exit the script using 'end'. this will trigger a send of the report to Doug and Michael
+        shell
+        .command('end', 'Outputs "closing iperf session".')
+        .action(function(args, callback) {
+            // ensure iperf stops running in background
+            exec('kill ' + serverPID)
+            // exit script
+            console.log(`exiting... wait a few seconds\n\nstopping pid ${serverPID}`);
+            setTimeout(function(){
+            console.log(`\n\npid kill ${serverPID} complete\n`);
+            process.exit()
+        }, 2000);
+
+        });
+        // show disperf shell cmd
+        shell
+        .delimiter('disperf$')
+        .show();
+        // const server = spawn('node', ['server.js']);
+
+        server.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+      
+          // array = data.match(/[^\r\n]+/g);
+          //   output = stderr
+          //   connection = array[5].split("]")[1]
+          //   header = array[6].split("]")[1]
+          //   data = array[7].split("]")[1]
+          //   string = array[7].split("/sec  ")[1].replace("/", " ")
+          // console.log(`array: ${array}`);
+      
+        });
+      
+        server.stderr.on('data', (data) => {
+            console.log(`stderr: ${data}`);
+        
+        });
+        
+        server.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+        });
     break;
     
     case undefined:

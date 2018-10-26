@@ -21,6 +21,7 @@
     "bunyan": "^1.8.12",
     "child_process": "^1.0.2",
     "date-and-time": "^0.6.2",
+    "exec-sh": "^0.3.2",
     "express": "^4.16.3",
     "fs": "0.0.1-security",
     "http": "0.0.0",
