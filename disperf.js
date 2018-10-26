@@ -8,13 +8,14 @@ const shell = require("vorpal")();
 const WebSocket = require('ws');
 const http = require('http');
 const url = require('url');
+const ip= require('ip');
 
 const path = require("path");
 
 const terminalLink = require('terminal-link');
  
 const webApp = terminalLink('disperf diagnostics page', 'localhost:8080');
-
+//console.log(ip.address())
 switch(process.argv[2]){
 
     case 'c':
@@ -46,9 +47,10 @@ switch(process.argv[2]){
 
     case 's':
     case 'server':
+        console.log('=*=*=*=*=*=\nThis machine\'s public IP is ' + ip.address() + '\n*=*=*=*=*=*=')
         const server = spawn('iperf', ['-s', '-u', '-p', '4464']);
         const serverPID = server.pid
-        console.log('iperf pid', serverPID)
+        console.log('\niperf pid', serverPID)
         console.log('\n=*=*=*=*=*=*=*=*=*=*=*=*=*=\nIMPORTANT: \nplease type "end" + Enter, instead of "crtl-c" to exit this script!\n=*=*=*=*=*=*=*=*=*=*=*=*=*=\n' )
         // use this to exit the script using 'end'. this will trigger a send of the report to Doug and Michael
         shell
