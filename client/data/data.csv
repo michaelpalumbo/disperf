@@ -1,0 +1,9 @@
+date,transferred,transferUnit,bandwidth,bandwidthUnit,jitter,jitterUnit,writeError,writePercentage
+2018-10-26_18:25:05,104,MBytes,87.3,Mbits/sec,0.207,ms,10793/85032,(13%)
+2018-10-26_18:25:15,192,MBytes,80.2,Mbits/sec,0.096,ms,33151/170126,(19%)
+2018-10-26_18:25:26,182,MBytes,50.1,Mbits/sec,14.580,ms,125335/255102,(49%)
+2018-10-26_18:25:36,178,MBytes,36.7,Mbits/sec,13.863,ms,212932/340127,(63%)
+2018-10-26_18:25:46,118,MBytes,19.5,Mbits/sec,0.117,ms,340763/425224,(80%)
+2018-10-26_18:25:56,144,MBytes,19.8,Mbits/sec,13.408,ms,407659/510384,(80%)
+2018-10-26_18:26:07,148,MBytes,17.4,Mbits/sec,13.193,ms,489560/595310,(82%)
+2018-10-26_18:26:17,145,MBytes,14.8,Mbits/sec,14.520,ms,577481/680576,(85%)

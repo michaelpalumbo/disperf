@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node disperf.js"
+    "start": "node disperf.js $MODE"
   },
   "repository": {
     "type": "git",
@@ -18,9 +18,22 @@
   },
   "homepage": "https://github.com/michaelpalumbo/disperf#readme",
   "dependencies": {
+    "bunyan": "^1.8.12",
     "child_process": "^1.0.2",
+    "date-and-time": "^0.6.2",
+    "exec-sh": "^0.3.2",
+    "express": "^4.16.3",
     "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "ip": "^1.1.5",
+    "mongodb": "^3.1.6",
+    "node-notifier": "^5.3.0",
     "node-schedule": "^1.3.0",
-    "sendmail": "^1.4.1"
+    "path": "^0.12.7",
+    "sendmail": "^1.4.1",
+    "terminal-link": "^1.1.0",
+    "url": "^0.11.0",
+    "vorpal": "^1.12.0",
+    "ws": "^6.0.0"
   }
 }

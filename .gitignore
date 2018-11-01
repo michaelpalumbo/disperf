@@ -1,0 +1,13 @@
+#pesky_.DS_Store
+*.DS_Store
+
+#don't track report files
+*.txt
+*.csv
+client/data/*
+
+#don't track code insiders metafiles
+disperf.code-workspace
+
+#don't track the npm
+node_modules

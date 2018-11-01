@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    
+</head>
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+</style>
+<body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<table>
+    <tr>
+        <th>
+            Attempt Interval (s)
+        </th>
+        <th>
+            Total Number of Attempts
+        </th>
+        <th>
+            Last Attempt
+        </th>
+    </tr>
+    <tr>
+        <td>
+
+        </td>
+        <td>
+
+        </td>
+        <td>
+
+        </td>
+    </tr>
+</table>
+
+<div height="10%" scroll="auto" frameborder="2">
+        <ul id="connection">
+            <li></li>
+    
+        </ul>
+    </div>
+
+<select style="width:30%; overflow: scroll;" id="openFileName" onchange="openFileName(selectedIndex);">
+        <option selected disabled>Select Session...</option> 
+        <option>Real-time of current session (Default)</option>
+
+    </select> 
+
+<!-- load graph into iframe! -->
+<script>
+// so we can access the current data source in other functions:   
+var getFile = 'data/data.csv';
+
+function openFileName (selectedIndex){
+    fileIndex = (selectedIndex - 2)
+    var e = document.getElementById("openFileName");
+    var getFile = e.options[e.selectedIndex].value;
+    //     ws.send(JSON.stringify({
+    // 	type: "getFile",
+    //     date: Date.now(),
+    //     value: getFile
+    // }));
+    if (getFile === 'Real-time of current session (Default)'){
+        $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+    } else {
+        $('#disperfGraph').attr('src', "graph.html?param1=" + 'data/' + getFile); 
+    }
+    // function myFunction(){
+        
+    // } 
+        //console.log(strUser)
+        //cpp2CodeMirror(cppSource[Object.keys(cppSource)[fileIndex]], $("#codeView"));
+    }
+</script>
+
+<iframe id="disperfGraph" src="graph.html" width="99%" height=450  frameborder="2"></iframe>
+
+<div height="30%" scroll="auto" frameborder="2">
+    <ul id="log">
+        <li>awaiting next attempt...</li>
+
+    </ul>
+</div>
+
+<script>
+
+var fileList = [];
+
+</script>
+    <!-- load the d3.js library    
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<script>
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    width = 1000 - margin.left - margin.right,
+    height = 270 - margin.top - margin.bottom;
+
+// Parse the date / time
+var parseDate = d3.time.format("%Y-%m-%d_%H:%M:%S").parse;
+var formatTime = d3.time.format("%x " + "%X");
+
+// Set the ranges
+var x = d3.time.scale().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom").ticks(5);
+
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left").ticks(5);
+
+// Define the line
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.bandwidth); });
+
+// Define the div for the tooltip
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+// Adds the svg canvas
+var svg = d3.select("body")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", 
+              "translate(" + margin.left + "," + margin.top + ")");
+
+// Get the data
+d3.csv("data.csv", function(error, data) {
+    data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        console.log(d.date)
+        d.unit = d.bandwidthUnit
+        
+        d.bandwidth = +d.bandwidth
+        // console.log(d.unit)
+
+        if (d.unit === "Gbits/sec"){
+            d.bandwidth = 1000 * d.bandwidth
+        }
+
+        d.writeError = d.writeError;
+        // d.error = +d.error;
+        d.pps = +d.pps;
+        d.ppsLabel = d.ppsLabel
+        d.transferred = d.transferred;
+        d.transferUnit = d.transferUnit;
+
+    });
+
+    // Scale the range of the data
+    x.domain(d3.extent(data, function(d) { return d.date; }));
+    y.domain([0, d3.max(data, function(d) { return d.bandwidth; })]);
+
+    // Add the valueline path.
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(data));
+
+    // Add the scatterplot
+    svg.selectAll("dot")	
+        .data(data)			
+    .enter().append("circle")								
+        .attr("r", 5)		
+        .attr("cx", function(d) { return x(d.date); })		 
+        .attr("cy", function(d) { return y(d.bandwidth); })		
+        .on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(formatTime(d.date) + "<br>Transferred: " + d.transferred + ' ' + d.transferUnit + "<br>write/error: " + d.writeError + "<br>PPS: " + d.pps) 	
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });
+
+    // Add the X Axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    // text label for the x axis
+    svg.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + margin.top + 20) + ")")
+      .style("text-anchor", "middle")
+      .text("Date & Time");
+
+
+    // Add the Y Axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        // .text("Mbits/sec")
+
+    // text label for the y axis
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Mbits/sec"); 
+
+}); -->
+<script>
+/////////////////// WEBSOCKET STUFF
+
+var ws;
+function ws_connect(opt) {
+	ws = new WebSocket(opt.transport+'://'+opt.host+':'+opt.port, opt.protocols);
+	ws.binaryType = 'arraybuffer';
+	ws.onerror = opt.onerror;
+	ws.onopen = opt.onopen;
+	ws.onmessage = opt.onmessage;
+	ws.onclose = function(e) {
+		ws = null;
+		setTimeout(function(){
+			console.log("websocket reconnecting...");
+			ws_connect(opt);
+		}, 2000);		
+		opt.onclose(e);
+	}
+	return ws;
+}
+
+ws_connect({
+	transport: "ws",
+	host: "localhost",
+	port: "8080",
+	protocols: [],
+	onerror: function() {},
+	onclose: function(e) { console.log('websocket closed', e.code); },
+	onopen: function() {
+		console.log('websocket opened');
+		// once connected, request the current scene:
+		ws.send(JSON.stringify({
+			type: "init",
+			date: Date.now()
+		}));
+	},
+	onmessage: function(e) { 
+		if (e.data instanceof ArrayBuffer) {
+			console.log("ws received arraybuffer of " + e.data.byteLength + " bytes");
+		} else {
+			try {
+				var msg = JSON.parse(e.data);
+				console.log("ws received JSON", msg);
+				handleMessage(msg);
+			} catch (e) {
+				console.log('ws bad JSON: ', e);
+			}
+		} 
+		// //Example code: send a binary blob:
+		// const array = new Float32Array(5);
+		// for (var i = 0; i < array.length; ++i) {
+		// 	array[i] = i / 2;
+		// }
+		// ws.send(array);
+	},
+});
+
+
+function handleMessage(msg) {
+    console.log(msg)
+
+	switch (msg.type) {
+        case "graphUpdate": 
+            // reload the graph according to which dataset is currently selected by user
+            // if using default dataset (which appears at startup)
+            if (getFile === 'data/data.csv') {
+                document.getElementById('disperfGraph').contentWindow.location.reload();
+            }
+            // if using the default dataset, but user picked it likely after looking at another dataset:
+            else if (getFile === 'Real-time of current session (Default)'){
+            $('#disperfGraph').attr('src', "graph.html?param1=data/data.csv"); 
+            } 
+            // if using a user-selected dataset (static data), don't refresh the graph!
+            else {
+            }			
+        break;
+            
+        ///// File Chooser        
+        case "fileList":
+            fileList.push(msg.value)
+            // first clear the select element options before populating it again
+            document.getElementById('openFileName').options.length = 2;
+            // target the file selection UI
+            var sel = document.getElementById('openFileName')
+            // break list into individual files
+            msg.value.forEach(function(element) {
+                // restrict file list to .csv and only the dated reports
+                if (element.includes('.csv')){
+                    if (element.includes('logfile.csv')){
+                        // ignore these files...
+                    } 
+                    else if (element.includes('data.csv')){
+                        // ignore these files...
+                    } 
+                    // populate the selection UI with correct filenames
+                    else {
+                        var opt = document.createElement('option')
+                        opt.appendChild(document.createTextNode(element))
+                        opt.value = element
+                        sel.appendChild(opt)
+                    }
+                }
+            })       
+        break;
+
+        case "log":
+        console.log(msg.value)
+
+        line = msg.value
+        
+            var ul = document.getElementById("log");
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(line));
+            ul.insertBefore(li, ul.childNodes[0])
+            //ul.appendChild(li);
+        
+        break;
+
+        case "connection":
+        console.log(msg.value)
+
+        line = msg.value
+        
+
+            var ul = document.getElementById("connection");
+
+            ul.removeChild(ul.childNodes[0]); 
+            ul.removeChild(ul.childNodes[1]); 
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(line));
+            ul.appendChild(li, ul.childNodes)
+            //ul.appendChild(li);
+        
+        break;
+
+	}
+}
+
+
+</script>
+</body>
